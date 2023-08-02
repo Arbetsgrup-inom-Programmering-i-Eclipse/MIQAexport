@@ -1,0 +1,1 @@
+data source = SLTVARDB3; initial catalog = VARIAN; persist security info = True; MultipleActiveResultSets = True; Integrated Security = SSPI
