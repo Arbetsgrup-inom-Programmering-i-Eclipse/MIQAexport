@@ -47,105 +47,15 @@ namespace MIQAexport
         public static DataTable GetPatientIDList(DateTime startDate, DateTime endDate)
         {
             DataTable datatable = AriaInterface.Query(@"SELECT DISTINCT
-                                                        Patient.PatientId
-                                                    FROM
-                                                        Patient,
-                                                        TreatmentRecord
-                                                    WHERE
-                                                        TreatmentRecord.PatientSer=Patient.PatientSer AND
-                                                        TreatmentRecord.TreatmentRecordDateTime BETWEEN '" + startDate.ToString() + @"' AND '" + endDate.ToString() + @"'
-                                                    ORDER BY
-                                                        Patient.PatientId
-                                                        ");
-            return datatable;
-        }
-        public static DataTable GetPatientIDList(string date) //Returnerar en lista över patienter som har slutfört "Sista behandling" eller sista fraktionen enligt ordination
-        {
-            DataTable datatable = AriaInterface.Query(@"SELECT DISTINCT
                                                             Patient.PatientId
-                                                        FROM 
-                                                            Activity,
-                                                            Patient,
-                                                            ScheduledActivity,
-                                                            RadiationHstry,
-                                                            ActivityInstance,
-                                                            TreatmentRecord,
-                                                            Prescription,
-                                                            PlanSetup,
-                                                            RTPlan
-                                                        WHERE
-                                                            Patient.PatientSer=ScheduledActivity.PatientSer AND
-                                                            ScheduledActivity.ActivityInstanceSer=ActivityInstance.ActivityInstanceSer AND
-                                                            Activity.ActivitySer=ActivityInstance.ActivitySer AND
-                                                            ScheduledActivity.ActualEndDate >= '" + date + @"' AND
-                                                            YEAR(ScheduledActivity.ActualEndDate) = YEAR(RadiationHstry.TreatmentEndTime) AND
-                                                            MONTH(ScheduledActivity.ActualEndDate) = MONTH(RadiationHstry.TreatmentEndTime) AND
-                                                            DAY(ScheduledActivity.ActualEndDate) = DAY(RadiationHstry.TreatmentEndTime) AND
-                                                            (Activity.ActivitySer LIKE '" + 537 + @"' OR
-                                                            Prescription.NumberOfFractions = RadiationHstry.FractionNumber) AND
-                                                            RadiationHstry.TreatmentEndTime >= '" + date + @"' AND
-                                                            TreatmentRecord.TreatmentRecordSer = RadiationHstry.TreatmentRecordSer AND
-                                                            TreatmentRecord.PatientSer = Patient.PatientSer AND
-                                                            TreatmentRecord.RTPlanSer = RTPlan.RTPlanSer AND
-                                                            RTPlan.PlanSetupSer = PlanSetup.PlanSetupSer AND
-                                                            Prescription.PrescriptionSer = PlanSetup.PrescriptionSer
-                                                            ");
-            return datatable;
-            //Activity.ActivitySer LIKE '" + 847 + @"' OR
-        }
-        public static DataTable GetCTSliceUIDs(string RTPlanSer) //Returnerar CT-snittens UID baserat på planens UID
-        {
-            DataTable datatable = AriaInterface.Query(@"SELECT DISTINCT
-                                                        Slice.SliceUID
-                                                    FROM
-                                                        Slice,
-                                                        Image,
-                                                        StructureSet,
-                                                        PlanSetup,
-                                                        RTPlan
-                                                    WHERE
-                                                        RTPlan.RTPlanSer = '" + RTPlanSer + @"' AND
-                                                        RTPlan.PlanSetupSer = PlanSetup.PlanSetupSer AND
-                                                        PlanSetup.StructureSetSer = StructureSet.StructureSetSer AND
-                                                        StructureSet.ImageSer = Image.ImageSer AND
-                                                        Image.SeriesSer = Slice.SeriesSer AND
-                                                        Slice.SliceModality = 'CT'
-                                                        ");
-            return datatable;
-        }
-
-        public static string GetPatientSer(string patientID) // översätter patient ID till patientens serienummer i Aria
-        {
-            DataTable datatable = AriaInterface.Query(@"SELECT
-                                                            Patient.PatientSer
                                                         FROM
-                                                            Patient
-                                                        WHERE                    
-                                                            Patient.PatientId LIKE '" + patientID + @"'
-                                                        GROUP BY
-                                                            Patient.PatientSer");
-            if (!datatable.Rows[0].IsNull(0)) // om första elementet inte är tomt
-                return datatable.Rows[0]["PatientSer"].ToString(); //skicka tillbaka patientens serienummer
-            return string.Empty;
-        }
-        public static DataTable GetCourseSer(string PatienSer, DateTime date) //Returnera alla kursers serienummer baserat på patient och datum
-        {
-            DataTable datatable = AriaInterface.Query(@"SELECT DISTINCT
-                                                            Course.CourseSer
-                                                        FROM
-                                                            Series,
-                                                            RTPlan,
-                                                            TreatmentRecord,
-                                                            PlanSetup,
                                                             Patient,
-                                                            Course
+                                                            TreatmentRecord
                                                         WHERE
-                                                            PlanSetup.CourseSer=Course.CourseSer AND
-                                                            PlanSetup.PlanSetupSer=RTPlan.PlanSetupSer AND
-                                                            RTPlan.RTPlanSer=TreatmentRecord.RTPlanSer AND
                                                             TreatmentRecord.PatientSer=Patient.PatientSer AND
-                                                            TreatmentRecord.TreatmentRecordDateTime >= '" + date + @"' AND
-                                                            Patient.PatientSer= '" + PatienSer + @"'
+                                                            TreatmentRecord.TreatmentRecordDateTime BETWEEN '" + startDate.ToString() + @"' AND '" + endDate.ToString() + @"'
+                                                        ORDER BY
+                                                            Patient.PatientId
                                                             ");
             return datatable;
         }
@@ -167,95 +77,74 @@ namespace MIQAexport
                                                             ");
             return datatable;
         }
-        //public static DataTable GetRTPlanUID(string CourseSer) //Returnerar planernas UIDs och serienummer baserat på kursserienummer
-        //{
-        //    DataTable datatable = AriaInterface.Query(@"SELECT DISTINCT
-        //                                                    RTPlan.PlanUID,
-        //                                                    RTPlan.RTPlanSer
-        //                                                FROM
-        //                                                    Series,
-        //                                                    RTPlan,
-        //                                                    TreatmentRecord,
-        //                                                    PlanSetup,
-        //                                                    Patient,
-        //                                                    Course
-        //                                                WHERE
-        //                                                    PlanSetup.CourseSer=Course.CourseSer AND
-        //                                                    PlanSetup.PlanSetupSer=RTPlan.PlanSetupSer AND
-        //                                                    RTPlan.RTPlanSer=TreatmentRecord.RTPlanSer AND
-        //                                                    Course.CourseSer= '" + CourseSer + @"'
-        //                                                    ");
-        //    return datatable;
-        //}
         public static DataTable GetRTRecordUIDs(string PatienId, string RTPlanSer) //Returnerar RTRecord UIDs baserat på patienter och planens serienummer
         {
             DataTable datatable = AriaInterface.Query(@"SELECT DISTINCT
-                                                        TreatmentRecord.TreatmentRecordUID
-                                                    FROM
-                                                        Patient,
-                                                        RTPlan,
-                                                        Series,
-                                                        TreatmentRecord,
-                                                        RadiationHstry
-                                                    WHERE
-                                                        Series.SeriesSer=TreatmentRecord.SeriesSer AND
-                                                        RadiationHstry.TreatmentRecordSer=TreatmentRecord.TreatmentRecordSer AND
-                                                        TreatmentRecord.PatientSer=Patient.PatientSer AND
-                                                        Patient.PatientId= '" + PatienId + @"' AND
-                                                        RTPlan.RTPlanSer=TreatmentRecord.RTPlanSer AND
-                                                        RTPlan.RTPlanSer = '" + RTPlanSer + @"'
-                                                        ");
+                                                            TreatmentRecord.TreatmentRecordUID
+                                                        FROM
+                                                            Patient,
+                                                            RTPlan,
+                                                            Series,
+                                                            TreatmentRecord,
+                                                            RadiationHstry
+                                                        WHERE
+                                                            Series.SeriesSer=TreatmentRecord.SeriesSer AND
+                                                            RadiationHstry.TreatmentRecordSer=TreatmentRecord.TreatmentRecordSer AND
+                                                            TreatmentRecord.PatientSer=Patient.PatientSer AND
+                                                            Patient.PatientId= '" + PatienId + @"' AND
+                                                            RTPlan.RTPlanSer=TreatmentRecord.RTPlanSer AND
+                                                            RTPlan.RTPlanSer = '" + RTPlanSer + @"'
+                                                            ");
             return datatable;
         }
-
         public static DataTable GetCTUIDs(string RTPlanSer) //Returnerar CT UIDs baserat på planens serienummer
         {
             DataTable datatable = AriaInterface.Query(@"SELECT DISTINCT
-                                                        Series.SeriesUID
-                                                    FROM
-                                                        Series,
-                                                        Image,
-                                                        StructureSet,
-                                                        RTPlan,
-                                                        PlanSetup
-                                                    WHERE
-                                                        Series.SeriesSer=Image.SeriesSer AND
-                                                        Image.ImageSer=StructureSet.ImageSer AND
-                                                        StructureSet.StructureSetSer=PlanSetup.StructureSetSer AND
-                                                        PlanSetup.PlanSetupSer=RTPlan.PlanSetupSer AND
-                                                        RTPlan.RTPlanSer = '" + RTPlanSer + @"' AND
-                                                        Series.SeriesModality = 'CT'
-                                                        ");
+                                                            Series.SeriesUID
+                                                        FROM
+                                                            Series,
+                                                            Image,
+                                                            StructureSet,
+                                                            RTPlan,
+                                                            PlanSetup
+                                                        WHERE
+                                                            Series.SeriesSer=Image.SeriesSer AND
+                                                            Image.ImageSer=StructureSet.ImageSer AND
+                                                            StructureSet.StructureSetSer=PlanSetup.StructureSetSer AND
+                                                            PlanSetup.PlanSetupSer=RTPlan.PlanSetupSer AND
+                                                            RTPlan.RTPlanSer = '" + RTPlanSer + @"' AND
+                                                            Series.SeriesModality = 'CT'
+                                                            ");
             return datatable;
         }
         public static DataTable GetRTStructureSetUIDs(string RTPlanSer) //Returnerar RTStructureSet UIDs baserat på planens serienummer
         {
             DataTable datatable = AriaInterface.Query(@"SELECT
-                                                        StructureSet.StructureSetUID
-                                                    FROM
-                                                        StructureSet,
-                                                        RTPlan,
-                                                        PlanSetup
-                                                    WHERE
-                                                        StructureSet.StructureSetSer=PlanSetup.StructureSetSer AND
-                                                        PlanSetup.PlanSetupSer=RTPlan.PlanSetupSer AND
-                                                        RTPlan.RTPlanSer = '" + RTPlanSer + @"'
-                                                        ");
+                                                            StructureSet.StructureSetUID
+                                                        FROM
+                                                            StructureSet,
+                                                            RTPlan,
+                                                            PlanSetup
+                                                        WHERE
+                                                            StructureSet.StructureSetSer=PlanSetup.StructureSetSer AND
+                                                            PlanSetup.PlanSetupSer=RTPlan.PlanSetupSer AND
+                                                            RTPlan.RTPlanSer = '" + RTPlanSer + @"'
+                                                            ");
             return datatable;
         }
         public static DataTable GetRTDose(string RTPlanSer) //Returnerar RTDose UIDs baserat på planens serienummer
         {
             DataTable datatable = AriaInterface.Query(@"SELECT DISTINCT
-                                                        DoseMatrix.DoseUID
-                                                    FROM
-                                                        PlanSetup,
-                                                        RTPlan,
-                                                        DoseMatrix
-                                                    WHERE
-                                                        DoseMatrix.PlanSetupSer=PlanSetup.PlanSetupSer AND
-                                                        PlanSetup.PlanSetupSer=RTPlan.PlanSetupSer AND
-                                                        RTPlan.RTPlanSer = '" + RTPlanSer + @"'
-                                                        ");
+                                                            DoseMatrix.DoseUID
+                                                        FROM
+                                                            PlanSetup,
+                                                            RTPlan,
+                                                            DoseMatrix
+                                                        WHERE
+                                                            DoseMatrix.PlanSetupSer=PlanSetup.PlanSetupSer AND
+                                                            PlanSetup.PlanSetupSer=RTPlan.PlanSetupSer AND
+                                                            RTPlan.RTPlanSer = '" + RTPlanSer + @"'
+                                                            ");
             return datatable;
         }
     }
