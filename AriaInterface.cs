@@ -77,7 +77,7 @@ namespace MIQAexport
                                                             ");
             return datatable;
         }
-        public static DataTable GetRTRecordUIDs(string PatienId, string RTPlanSer) //Returnerar RTRecord UIDs baserat på patienter och planens serienummer
+        public static DataTable GetRTRecordUIDs(string PatienId, string RTPlanUID) //Returnerar RTRecord UIDs baserat på patienter och planens serienummer
         {
             DataTable datatable = AriaInterface.Query(@"SELECT DISTINCT
                                                             TreatmentRecord.TreatmentRecordUID
@@ -93,11 +93,11 @@ namespace MIQAexport
                                                             TreatmentRecord.PatientSer=Patient.PatientSer AND
                                                             Patient.PatientId= '" + PatienId + @"' AND
                                                             RTPlan.RTPlanSer=TreatmentRecord.RTPlanSer AND
-                                                            RTPlan.RTPlanSer = '" + RTPlanSer + @"'
+                                                            RTPlan.PlanUID = '" + RTPlanUID + @"'
                                                             ");
             return datatable;
         }
-        public static DataTable GetCTUIDs(string RTPlanSer) //Returnerar CT UIDs baserat på planens serienummer
+        public static DataTable GetCTUIDs(string RTPlanUID) //Returnerar CT UIDs baserat på planens serienummer
         {
             DataTable datatable = AriaInterface.Query(@"SELECT DISTINCT
                                                             Series.SeriesUID
@@ -112,12 +112,12 @@ namespace MIQAexport
                                                             Image.ImageSer=StructureSet.ImageSer AND
                                                             StructureSet.StructureSetSer=PlanSetup.StructureSetSer AND
                                                             PlanSetup.PlanSetupSer=RTPlan.PlanSetupSer AND
-                                                            RTPlan.RTPlanSer = '" + RTPlanSer + @"' AND
+                                                            RTPlan.PlanUID = '" + RTPlanUID + @"' AND
                                                             Series.SeriesModality = 'CT'
                                                             ");
             return datatable;
         }
-        public static DataTable GetRTStructureSetUIDs(string RTPlanSer) //Returnerar RTStructureSet UIDs baserat på planens serienummer
+        public static DataTable GetRTStructureSetUIDs(string RTPlanUID) //Returnerar RTStructureSet UIDs baserat på planens serienummer
         {
             DataTable datatable = AriaInterface.Query(@"SELECT
                                                             StructureSet.StructureSetUID
@@ -128,11 +128,11 @@ namespace MIQAexport
                                                         WHERE
                                                             StructureSet.StructureSetSer=PlanSetup.StructureSetSer AND
                                                             PlanSetup.PlanSetupSer=RTPlan.PlanSetupSer AND
-                                                            RTPlan.RTPlanSer = '" + RTPlanSer + @"'
+                                                            RTPlan.PlanUID = '" + RTPlanUID + @"'
                                                             ");
             return datatable;
         }
-        public static DataTable GetRTDose(string RTPlanSer) //Returnerar RTDose UIDs baserat på planens serienummer
+        public static DataTable GetRTDose(string RTPlanUID) //Returnerar RTDose UIDs baserat på planens serienummer
         {
             DataTable datatable = AriaInterface.Query(@"SELECT DISTINCT
                                                             DoseMatrix.DoseUID
@@ -143,7 +143,7 @@ namespace MIQAexport
                                                         WHERE
                                                             DoseMatrix.PlanSetupSer=PlanSetup.PlanSetupSer AND
                                                             PlanSetup.PlanSetupSer=RTPlan.PlanSetupSer AND
-                                                            RTPlan.RTPlanSer = '" + RTPlanSer + @"'
+                                                            RTPlan.PlanUID = '" + RTPlanUID + @"'
                                                             ");
             return datatable;
         }
