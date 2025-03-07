@@ -16,10 +16,12 @@ namespace MIQAexport
     public class Run
     {
         private string LogFilePath; //Deklarerar loggfil
+        private string path;
         int n;
         public void Execute()
         {
-            LogFilePath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\MIQA logfiler\" + DateTime.Now.ToString("yy/MM/dd").Replace("-", "") + "_MIQA_logfile.txt"; //Sökväg till mapp på skrivbordet för loggfil
+            path = @"\\ltvastmanland.se\ltv\shares\vradiofy\RADIOFYSIK NYSTART\Strålbehandling\Teknik och QA\MIQA\Scripting\ScriptLogFiler\";
+            LogFilePath = path + DateTime.Now.ToString("yy/MM/dd").Replace("-", "") + "_MIQA_logfile.txt"; //Sökväg till mapp på skrivbordet för loggfil
             try //Testa att köra scriptet, om krasch gå till catch
             {
                 var startDate = DateTime.Today.AddDays(-120); //tidsintervallet för färdigbehandlade patienter, 00:00 4 mån bakåt
@@ -37,7 +39,7 @@ namespace MIQAexport
                 {
                     File.AppendAllText(LogFilePath, Environment.NewLine + "PatientID: " + patientID); //lägger till patientID i loggfilen"
                     Stopwatch sw = Stopwatch.StartNew(); //startar timer för scriptet
-                    string prevPlanUIDfilepath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\MIQA logfiler\planUIDs.txt"; //Sökväg till mapp på skrivbordet för loggfil
+                    string prevPlanUIDfilepath = path + "planUIDs.txt"; //Sökväg till mapp på skrivbordet för loggfil
                     Console.Clear();
                     Console.SetCursorPosition(0, 0); //Hoppar tillbaka till början av terminalen för varje patient
 
@@ -83,7 +85,7 @@ namespace MIQAexport
 
                     sw.Stop();
 
-                    File.AppendAllLines(prevPlanUIDfilepath, RTPlanSeriesUIDs);
+                    File.AppendAllLines(prevPlanUIDfilepath, RTPlanSeriesUIDs); //Loggar skickad plan för patient
                     File.AppendAllText(LogFilePath, Environment.NewLine + "Elapsed time: " + sw.Elapsed.TotalSeconds.ToString("0") + " s" + Environment.NewLine);
 
                     currentPat++; //ökar patienträknaren med 1
@@ -109,8 +111,6 @@ namespace MIQAexport
             NewPatientIDList = new List<string>();
             PatientIDList = rowExtraction(patientIDdt, PatientIDList); //Omvandlar rows från DataTable till strängar
 
-            bool removed;
-
             foreach (string patient in PatientIDList) //kontrollerar om planerna redan har skickats för patienten
             {
                 if (patient.Length == 12) //Kontrollerar att personnumret är 12 tecken långt
@@ -119,7 +119,7 @@ namespace MIQAexport
 
                     DataTable RTPlansUIDs = AriaInterface.GetRTPlanUID(patient, startDate); //Hämtar RTPlan UIDs
                     RTPlanUIDsList = rowExtraction(RTPlansUIDs, RTPlanUIDsList); //Omvandlar rows från DataTable till strängar i List
-                    NewPlanList(RTPlanUIDsList, out removed); //Tar bort planer som redan skickats till MIQA
+                    NewPlanList(RTPlanUIDsList, out bool removed); //Tar bort planer som redan skickats till MIQA
 
                     if (!removed)
                         NewPatientIDList.Add(patient);
@@ -153,11 +153,10 @@ namespace MIQAexport
                 CTseriesUIDs = CTseriesUIDs.Distinct().ToList(); //Skapar en lista av unika CT-serie UIDs för enskilda bilder i CTn
                 foreach (string s in CTseriesUIDs)
                 {
-                    int iteration = 0;
-                    move.MultipleSeriesUID(s, n, "CT", patientID, out iteration); //Skickar förfrågan att skicka DICOM-filer för CT
+                    move.MultipleSeriesUID(s, n, "CT", patientID, out int iteration); //Skickar förfrågan att skicka DICOM-filer för CT
 
-                    DICOMmoveResultToLog(iteration, name, iteration);//Skriver resultatet av flytten i loggfilen för CT
-                    if (iteration == 0 && !LogFilePath.Contains("Error"))
+                    DICOMmoveResultToLog(CTseriesUIDs.Count, name, iteration);//Skriver resultatet av flytten i loggfilen för CT
+                    if (iteration == 0 && !LogFilePath.Contains("Error")) //ifall inget har skickats döps loggfilen om till Error i titeln
                     {
                         string newLogFilePath = LogFilePath.Substring(0, LogFilePath.Length - 4) + " - Error.txt";
                         File.Move(LogFilePath, newLogFilePath);
@@ -190,7 +189,7 @@ namespace MIQAexport
         private List<string> NewPlanList(List<string> RTPlanUIDList, out bool removed) //Tar bort planer som redan skickats till MIQA 
         {
             removed = false;
-            string filepath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + @"\MIQA logfiler\planUIDs.txt"; //Sökväg till mapp på skrivbordet för loggfil
+            string filepath = path + "planUIDs.txt"; //Sökväg till mapp på skrivbordet för loggfil
             string[] RTPlansInMIQA = File.ReadAllLines(filepath);
 
             foreach (string RTPlan in RTPlanUIDList.ToList())
@@ -204,11 +203,6 @@ namespace MIQAexport
             {
                 removed = true;
             }
-            else
-            {
-
-            }
-
             return RTPlanUIDList;
         }
     }

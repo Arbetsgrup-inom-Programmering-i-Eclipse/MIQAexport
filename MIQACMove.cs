@@ -38,7 +38,6 @@ namespace MIQAexport
             receiver.SupportedAbstractSyntaxes = AbstractSyntax.ALL_RADIOTHERAPY_STORAGE;
             //Set up storage location
             var storagePath = @"\\sltvmiqa1\Incoming";
-            //storagePath = @"\\ltvastmanland.se\ltv\shares\ScandiDos\DELTA4+\Export_test";
 
             //Set the action when a DICOM files comes in
             receiver.DIMSEService.CStoreService.CStorePayloadAction = (dcm, asc) =>
@@ -84,6 +83,11 @@ namespace MIQAexport
 
             CMoveResponse response;
             response = mover.SendCMove(DICOM, local.AeTitle, ref msgId); //Utför operationen CMove
+            if (response.NumberOfCompletedOps == 0)
+            {
+                mover.Dispose();
+                Thread.Sleep(30000);
+            }
         }
         private void SendingDICOM(int lengthOfSeris, int n, IEnumerable<CFindInstanceIOD> DICOMs, string name, out int success) //Skickar flera DICOM
         {
@@ -115,9 +119,7 @@ namespace MIQAexport
             Console.WriteLine($"DICOM C-Move Results for {name} :                           ");
             Console.WriteLine($"Number of Completed Operations : {success} / {lengthOfSeris}              ");
             Console.SetCursorPosition(0, n);
-            //File.AppendAllText(LogFilePath, Environment.NewLine + $"DICOM C-Move Results for {name} :                           ");
-            //File.AppendAllText(LogFilePath, Environment.NewLine + $"Number of Completed Operations : {success} / {lengthOfSeris}              ");
-            if (success == 0)
+            if (success == 0) //Ifall den inte lyckas skicka DICOM-filer trots att de finns (ex korrupta filer) stängs connection och väntar 30 s innan den går vidare
             {
                 mover.Dispose();
                 Thread.Sleep(30000);
