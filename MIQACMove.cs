@@ -66,13 +66,14 @@ namespace MIQAexport
 
             SendingDICOM(DICOM); //Skickar DICOM till MIQA
         }
-        public void MultipleSeriesUID(string SeriesUID, int n, string SeriesName, string PatientID, out int iteration) //Samma som tidigare men för multipla serier 
+        public void MultipleSeriesUID(string SeriesUID, int n, string SeriesName, string PatientID, out int iteration, out int totDcms) //Samma som tidigare men för multipla serier 
         {
             var studies = finder.FindStudies(PatientID);
             var series = finder.FindSeries(studies);
             var DICOMs = series.Where(s => s.SeriesInstanceUID == SeriesUID) //Plockar ut alla DICOMs med seriens UID
                 .SelectMany(ser => finder.FindImages(ser));
             SendingDICOM(DICOMs.Count(), n, DICOMs, SeriesName, out iteration); //Plockar ut alla DICOMs med modaliteten CT
+            totDcms = DICOMs.Count();
         }
 
         private void SendingDICOM(CFindInstanceIOD DICOM) //Skickar 1 DICOM

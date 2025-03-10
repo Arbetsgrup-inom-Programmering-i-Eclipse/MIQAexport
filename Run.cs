@@ -153,9 +153,9 @@ namespace MIQAexport
                 CTseriesUIDs = CTseriesUIDs.Distinct().ToList(); //Skapar en lista av unika CT-serie UIDs för enskilda bilder i CTn
                 foreach (string s in CTseriesUIDs)
                 {
-                    move.MultipleSeriesUID(s, n, "CT", patientID, out int iteration); //Skickar förfrågan att skicka DICOM-filer för CT
+                    move.MultipleSeriesUID(s, n, "CT", patientID, out int iteration, out int totDcms); //Skickar förfrågan att skicka DICOM-filer för CT
 
-                    DICOMmoveResultToLog(CTseriesUIDs.Count, name, iteration);//Skriver resultatet av flytten i loggfilen för CT
+                    DICOMmoveResultToLog(totDcms, name, iteration);//Skriver resultatet av flytten i loggfilen för CT
                     if (iteration == 0 && !LogFilePath.Contains("Error")) //ifall inget har skickats döps loggfilen om till Error i titeln
                     {
                         string newLogFilePath = LogFilePath.Substring(0, LogFilePath.Length - 4) + " - Error.txt";
